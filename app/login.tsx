@@ -20,10 +20,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <LinearGradient
-      colors={["#FF7A8A", "#8B6CCB"]}
-      style={styles.container}
-    >
+    <LinearGradient colors={["#FF7A8A", "#8B6CCB"]} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
         {/* LOGO */}
         <View style={styles.logoContainer}>
@@ -31,17 +28,13 @@ export default function LoginScreen() {
             source={require("../assets/images/logo.png")}
             style={styles.logo}
           />
-          <Text style={styles.subtitle}>
-            Cuidamos lo que más amas
-          </Text>
+          <Text style={styles.subtitle}>Cuidamos lo que más amas</Text>
         </View>
 
         {/* CARD */}
         <View style={styles.card}>
           <Text style={styles.title}>¡Bienvenido!</Text>
-          <Text style={styles.description}>
-            Inicia sesión para continuar
-          </Text>
+          <Text style={styles.description}>Inicia sesión para continuar</Text>
 
           {/* EMAIL */}
           <Text style={styles.label}>Correo electrónico</Text>
@@ -85,7 +78,9 @@ export default function LoginScreen() {
           {/* BUTTON */}
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={() => router.push("./register/babysister/BabysitterDashboard")}
+            onPress={() =>
+              router.push("./register/babysister/BabysitterDashboard")
+            }
           >
             <Text style={styles.loginText}>Iniciar sesión</Text>
           </TouchableOpacity>
@@ -112,7 +107,7 @@ export default function LoginScreen() {
           <View style={styles.register}>
             <Text style={styles.registerText}>¿No tienes cuenta?</Text>
             <TouchableOpacity onPress={() => router.push("/register")}>
-               <Text style={styles.registerLink}> Regístrate</Text>
+              <Text style={styles.registerLink}> Regístrate</Text>
             </TouchableOpacity>
           </View>
         </View>
