@@ -78,9 +78,7 @@ export default function LoginScreen() {
           {/* BUTTON */}
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={() =>
-              router.push("./register/babysister/BabysitterDashboard")
-            }
+            onPress={() => router.push("/register/client/home")}
           >
             <Text style={styles.loginText}>Iniciar sesión</Text>
           </TouchableOpacity>

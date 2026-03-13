@@ -1,37 +1,25 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Image,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
+
+import { router } from "expo-router";
 
 import {
   ArrowLeft,
   Award,
-  Calendar,
   CheckCircle,
-  Clock,
-  Edit,
   MapPin,
   Shield,
   Star,
 } from "lucide-react-native";
 
-interface Props {
-  onEditProfile: () => void;
-  onEditAvailability: () => void;
-  onBack: () => void;
-  onNavigate: (screen: string) => void;
-}
-
-export default function BabysitterOwnProfile({
-  onEditProfile,
-  onEditAvailability,
-  onBack,
-}: Props) {
+export default function BabysitterOwnProfile() {
   const [activeTab, setActiveTab] = useState<"profile" | "bookings">("profile");
 
   const profile = {
@@ -43,7 +31,7 @@ export default function BabysitterOwnProfile({
     experience: "5 años",
     location: "Centro, Ciudad",
     about:
-      "Soy una niñera profesional con amplia experiencia en el cuidado de niños de todas las edades.",
+      "Soy una niñera profesional con amplia experiencia en el cuidado de niños de todas las edades. Me encanta crear un ambiente seguro y divertido para los pequeños.",
     skills: [
       "Primeros auxilios",
       "Educación infantil",
@@ -65,37 +53,16 @@ export default function BabysitterOwnProfile({
     { day: "Domingos", hours: "No disponible", available: false },
   ];
 
-  const upcomingBookings = [
-    {
-      id: 1,
-      clientName: "Laura Pérez",
-      clientPhoto:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
-      date: "Sábado, 15 Feb",
-      time: "2:00 PM - 6:00 PM",
-      children: 2,
-      payment: 60,
-      status: "confirmed",
-    },
-  ];
-
   return (
     <ScrollView style={styles.container}>
-      {/* HEADER IMAGE */}
+      {/* HEADER */}
 
       <View style={styles.headerContainer}>
         <Image source={{ uri: profile.photo }} style={styles.headerImage} />
 
-        <View style={styles.headerButtons}>
-          <Pressable style={styles.backBtn} onPress={onBack}>
-            <ArrowLeft size={20} color="#2E2E2E" />
-          </Pressable>
-
-          <Pressable style={styles.editBtn} onPress={onEditProfile}>
-            <Edit size={16} color="#886BC1" />
-            <Text style={styles.editText}>Editar perfil</Text>
-          </Pressable>
-        </View>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <ArrowLeft size={20} color="#2E2E2E" />
+        </TouchableOpacity>
       </View>
 
       {/* PROFILE CARD */}
@@ -155,7 +122,7 @@ export default function BabysitterOwnProfile({
       {/* TABS */}
 
       <View style={styles.tabs}>
-        <Pressable
+        <TouchableOpacity
           style={[
             styles.tabButton,
             activeTab === "profile" && styles.activeTab,
@@ -169,9 +136,9 @@ export default function BabysitterOwnProfile({
           >
             Mi Perfil
           </Text>
-        </Pressable>
+        </TouchableOpacity>
 
-        <Pressable
+        <TouchableOpacity
           style={[
             styles.tabButton,
             activeTab === "bookings" && styles.activeTab,
@@ -185,17 +152,34 @@ export default function BabysitterOwnProfile({
           >
             Reservas
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
 
       {/* PROFILE TAB */}
 
       {activeTab === "profile" && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Presentación</Text>
+          {/* PRESENTACION */}
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Presentación</Text>
+
+            <TouchableOpacity onPress={() => router.push("./EditPresentation")}>
+              <Text style={styles.editText}>Editar</Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.about}>{profile.about}</Text>
 
-          <Text style={styles.sectionTitle}>Habilidades</Text>
+          {/* HABILIDADES */}
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Habilidades</Text>
+
+            <TouchableOpacity onPress={() => router.push("./EditSkills")}>
+              <Text style={styles.editText}>Editar</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.skillWrap}>
             {profile.skills.map((skill) => (
@@ -205,7 +189,17 @@ export default function BabysitterOwnProfile({
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Certificaciones</Text>
+          {/* CERTIFICACIONES */}
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Certificaciones</Text>
+
+            <TouchableOpacity
+              onPress={() => router.push("./EditCertifications")}
+            >
+              <Text style={styles.editText}>Editar</Text>
+            </TouchableOpacity>
+          </View>
 
           {profile.certifications.map((cert) => (
             <View key={cert} style={styles.certRow}>
@@ -214,7 +208,17 @@ export default function BabysitterOwnProfile({
             </View>
           ))}
 
-          <Text style={styles.sectionTitle}>Disponibilidad</Text>
+          {/* DISPONIBILIDAD */}
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Disponibilidad</Text>
+
+            <TouchableOpacity
+              onPress={() => router.push("./BabysitterAvailabilityEditor")}
+            >
+              <Text style={styles.editText}>Editar</Text>
+            </TouchableOpacity>
+          </View>
 
           {availability.map((slot, i) => (
             <View key={i} style={styles.availabilityRow}>
@@ -222,39 +226,6 @@ export default function BabysitterOwnProfile({
               <Text style={{ color: slot.available ? "#886BC1" : "#999" }}>
                 {slot.hours}
               </Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* BOOKINGS TAB */}
-
-      {activeTab === "bookings" && (
-        <View style={styles.section}>
-          {upcomingBookings.map((booking) => (
-            <View key={booking.id} style={styles.bookingCard}>
-              <Image
-                source={{ uri: booking.clientPhoto }}
-                style={styles.avatar}
-              />
-
-              <View style={{ flex: 1 }}>
-                <Text style={styles.clientName}>{booking.clientName}</Text>
-
-                <View style={styles.row}>
-                  <Calendar size={14} />
-                  <Text>{booking.date}</Text>
-                </View>
-
-                <View style={styles.row}>
-                  <Clock size={14} />
-                  <Text>{booking.time}</Text>
-                </View>
-              </View>
-
-              <View>
-                <Text style={styles.payment}>${booking.payment}</Text>
-              </View>
             </View>
           ))}
         </View>
@@ -278,32 +249,13 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  headerButtons: {
+  backBtn: {
     position: "absolute",
     top: 50,
     left: 20,
-    right: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-
-  backBtn: {
     backgroundColor: "white",
     padding: 10,
     borderRadius: 20,
-  },
-
-  editBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    backgroundColor: "white",
-    padding: 10,
-    borderRadius: 20,
-  },
-
-  editText: {
-    fontSize: 12,
   },
 
   profileCard: {
@@ -431,8 +383,20 @@ const styles = StyleSheet.create({
     gap: 15,
   },
 
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
   sectionTitle: {
     fontSize: 16,
+    fontWeight: "600",
+  },
+
+  editText: {
+    color: "#886BC1",
+    fontWeight: "500",
   },
 
   about: {
@@ -461,28 +425,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 6,
-  },
-
-  bookingCard: {
-    flexDirection: "row",
-    gap: 10,
-    backgroundColor: "white",
-    padding: 15,
-    borderRadius: 20,
-  },
-
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
-
-  clientName: {
-    fontSize: 16,
-  },
-
-  payment: {
-    color: "#886BC1",
-    fontSize: 16,
   },
 });
