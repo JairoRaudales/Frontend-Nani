@@ -15,18 +15,9 @@ import {
 export default function LoginScreen() {
   const router = useRouter();
 
-  const [accountType, setAccountType] = useState("cliente");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  const handleLogin = () => {
-    if (accountType === "cliente") {
-      router.push("./register/client/home"); // dashboard cliente
-    } else {
-      router.push("/register/babysister/BabysitterDashboard"); // dashboard niñera
-    }
-  };
 
   return (
     <LinearGradient colors={["#FF7A8A", "#8B6CCB"]} style={styles.container}>
@@ -44,45 +35,6 @@ export default function LoginScreen() {
         <View style={styles.card}>
           <Text style={styles.title}>¡Bienvenido!</Text>
           <Text style={styles.description}>Inicia sesión para continuar</Text>
-
-          {/* TIPO DE CUENTA */}
-          <Text style={styles.label}>Tipo de cuenta</Text>
-
-          <View style={styles.accountSelector}>
-            <TouchableOpacity
-              style={[
-                styles.accountButton,
-                accountType === "cliente" && styles.accountActive,
-              ]}
-              onPress={() => setAccountType("cliente")}
-            >
-              <Text
-                style={[
-                  styles.accountText,
-                  accountType === "cliente" && styles.accountTextActive,
-                ]}
-              >
-                Cliente
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.accountButton,
-                accountType === "ninera" && styles.accountActive,
-              ]}
-              onPress={() => setAccountType("ninera")}
-            >
-              <Text
-                style={[
-                  styles.accountText,
-                  accountType === "ninera" && styles.accountTextActive,
-                ]}
-              >
-                Niñera
-              </Text>
-            </TouchableOpacity>
-          </View>
 
           {/* EMAIL */}
           <Text style={styles.label}>Correo electrónico</Text>
@@ -109,7 +61,6 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               style={styles.input}
             />
-
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Ionicons
                 name={showPassword ? "eye-off" : "eye"}
@@ -124,8 +75,14 @@ export default function LoginScreen() {
             <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
-          {/* LOGIN */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          {/* BUTTON */}
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.push("/register/client/home")}
+          >
+            /* para entrar al dashboard de ninera cambiar
+            "/register/client/home" */ /* por
+            "/register/babysister/BabysitterDashboard" */
             <Text style={styles.loginText}>Iniciar sesión</Text>
           </TouchableOpacity>
 
@@ -209,35 +166,6 @@ const styles = StyleSheet.create({
     color: "#374151",
     marginBottom: 6,
   },
-
-  accountSelector: {
-    flexDirection: "row",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    padding: 4,
-    marginBottom: 16,
-  },
-
-  accountButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-
-  accountActive: {
-    backgroundColor: "#FF7A8A",
-  },
-
-  accountText: {
-    color: "#6B7280",
-    fontWeight: "600",
-  },
-
-  accountTextActive: {
-    color: "white",
-  },
-
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -248,23 +176,19 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     gap: 10,
   },
-
   input: {
     flex: 1,
     fontSize: 14,
     color: "#111827",
   },
-
   forgot: {
     alignItems: "flex-end",
     marginBottom: 16,
   },
-
   forgotText: {
     fontSize: 12,
     color: "#8B6CCB",
   },
-
   loginButton: {
     backgroundColor: "#FF7A8A",
     borderRadius: 16,
@@ -272,31 +196,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-
   loginText: {
     color: "white",
     fontWeight: "700",
     fontSize: 15,
   },
-
   divider: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 16,
   },
-
   line: {
     flex: 1,
     height: 1,
     backgroundColor: "#E5E7EB",
   },
-
   dividerText: {
     marginHorizontal: 8,
     fontSize: 12,
     color: "#6B7280",
   },
-
   googleButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -308,28 +227,23 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 16,
   },
-
   googleIcon: {
     width: 18,
     height: 18,
   },
-
   googleText: {
     fontSize: 14,
     color: "#111827",
     fontWeight: "500",
   },
-
   register: {
     flexDirection: "row",
     justifyContent: "center",
   },
-
   registerText: {
     fontSize: 13,
     color: "#6B7280",
   },
-
   registerLink: {
     fontSize: 13,
     color: "#8B6CCB",
