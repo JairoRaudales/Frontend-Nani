@@ -190,7 +190,7 @@ export default function BabysitterDashboard() {
             onPress={() => router.push("./BabysitterBookingHistory")}
           >
             <Calendar color="#886BC1" />
-            <Text style={styles.quickTitle}>Historial</Text>
+            <Text style={styles.quickTitle}>Reservas</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
