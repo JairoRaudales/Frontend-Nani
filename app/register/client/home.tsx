@@ -1,22 +1,22 @@
-// import React, { useMemo, useState } from "react";
-// import {
-//   View,
-//   Text,
-//   StyleSheet,
-//   SafeAreaView,
-//   TextInput,
-//   TouchableOpacity,
-//   Image,
-//   FlatList,
-//   StatusBar,
-// } from "react-native";
-// import { LinearGradient } from "expo-linear-gradient";
 // import {
 //   Feather,
+//   FontAwesome,
 //   Ionicons,
 //   MaterialIcons,
-//   FontAwesome,
 // } from "@expo/vector-icons";
+// import { LinearGradient } from "expo-linear-gradient";
+// import React, { useMemo, useState } from "react";
+// import {
+//   FlatList,
+//   Image,
+//   SafeAreaView,
+//   StatusBar,
+//   StyleSheet,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
 
 // type Babysitter = {
 //   id: number;
@@ -32,7 +32,11 @@
 //   distanceKm: number;
 // };
 
-// type FilterType = "Disponibles" | "Cerca de ti" | "Mejor valoradas" | "Certificadas";
+// type FilterType =
+//   | "Disponibles"
+//   | "Cerca de ti"
+//   | "Mejor valoradas"
+//   | "Certificadas";
 
 // interface BabysitterCardProps {
 //   item: Babysitter;
@@ -80,17 +84,24 @@
 //   );
 // };
 
+// /* =========================================================
+//    PARTE IMPORTANTE 1:
+//    AQUÍ SE AGREGA userName PARA QUE EL NOMBRE SEA DINÁMICO
+//    ========================================================= */
 // interface HomeScreenProps {
+//   userName: string;
 //   onViewProfile: (id: number) => void;
 //   onNavigate: (screen: string) => void;
 // }
 
 // export default function HomeScreen({
+//   userName,
 //   onViewProfile,
 //   onNavigate,
 // }: HomeScreenProps) {
 //   const [searchText, setSearchText] = useState("");
-//   const [selectedFilter, setSelectedFilter] = useState<FilterType>("Disponibles");
+//   const [selectedFilter, setSelectedFilter] =
+//     useState<FilterType>("Disponibles");
 
 //   // Esto luego lo puedes traer desde una API
 //   const [babysitters] = useState<Babysitter[]>([
@@ -161,7 +172,7 @@
 //         (item) =>
 //           item.name.toLowerCase().includes(text) ||
 //           item.location.toLowerCase().includes(text) ||
-//           item.experience.toLowerCase().includes(text)
+//           item.experience.toLowerCase().includes(text),
 //       );
 //     }
 
@@ -170,10 +181,10 @@
 //         result = result.filter((item) => item.isAvailable);
 //         break;
 //       case "Cerca de ti":
-//         result = result.sort((a, b) => a.distanceKm - b.distanceKm);
+//         result = [...result].sort((a, b) => a.distanceKm - b.distanceKm);
 //         break;
 //       case "Mejor valoradas":
-//         result = result.sort((a, b) => b.rating - a.rating);
+//         result = [...result].sort((a, b) => b.rating - a.rating);
 //         break;
 //       case "Certificadas":
 //         result = result.filter((item) => item.certified);
@@ -192,10 +203,24 @@
 //       end={{ x: 1, y: 0 }}
 //       style={styles.header}
 //     >
-//       <Text style={styles.greeting}>Hola, Jairo 👋</Text>
+//       {/* =========================================================
+//           PARTE IMPORTANTE 2:
+//           ESTA ES LA LÍNEA QUE CAMBIA EL TEXTO ESTÁTICO
+//           ANTES ESTABA ASÍ:
+//           <Text style={styles.greeting}>Hola, Jairo 👋</Text>
+
+//           AHORA ESTÁ DINÁMICO ASÍ:
+//           <Text style={styles.greeting}>Hola, {userName} 👋</Text>
+//          ========================================================= */}
+//       <Text style={styles.greeting}>Hola, {userName} 👋</Text>
 
 //       <View style={styles.searchContainer}>
-//         <Feather name="search" size={20} color="#A0A0A0" style={styles.searchIcon} />
+//         <Feather
+//           name="search"
+//           size={20}
+//           color="#A0A0A0"
+//           style={styles.searchIcon}
+//         />
 //         <TextInput
 //           placeholder="Buscar niñera..."
 //           placeholderTextColor="#A0A0A0"
@@ -263,7 +288,6 @@
 //           showsVerticalScrollIndicator={false}
 //         />
 
-//         {/* Bottom Navigation */}
 //         <View style={styles.bottomNav}>
 //           <TouchableOpacity style={styles.navItem}>
 //             <Ionicons name="home-outline" size={22} color="#886BC1" />
@@ -283,7 +307,11 @@
 //             onPress={() => onNavigate("chat")}
 //           >
 //             <View style={styles.chatIconWrapper}>
-//               <Ionicons name="chatbubble-ellipses-outline" size={22} color="#B0B0B0" />
+//               <Ionicons
+//                 name="chatbubble-ellipses-outline"
+//                 size={22}
+//                 color="#B0B0B0"
+//               />
 //               <View style={styles.notificationDot} />
 //             </View>
 //             <Text style={styles.navText}>Chat</Text>
@@ -315,7 +343,7 @@
 //     paddingBottom: 0,
 //   },
 //   header: {
-//     paddingTop: 18,
+//     paddingTop: 25,
 //     paddingHorizontal: 16,
 //     paddingBottom: 18,
 //     borderBottomLeftRadius: 28,
@@ -508,25 +536,478 @@
 //   },
 // });
 
-import React, { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  FlatList,
-  StatusBar,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+// import {
+//   Feather,
+//   FontAwesome,
+//   Ionicons,
+//   MaterialIcons,
+// } from "@expo/vector-icons";
+// import { LinearGradient } from "expo-linear-gradient";
+// import React, { useMemo, useState } from "react";
+// import {
+//   FlatList,
+//   Image,
+//   SafeAreaView,
+//   StatusBar,
+//   StyleSheet,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from "react-native";
+// import { Babysitter, babysittersData } from "../../data/babysitters";
+
+// type FilterType =
+//   | "Disponibles"
+//   | "Cerca de ti"
+//   | "Mejor valoradas"
+//   | "Certificadas";
+
+// interface BabysitterCardProps {
+//   item: Babysitter;
+//   onViewProfile: (id: number) => void;
+// }
+
+// const BabysitterCard = ({ item, onViewProfile }: BabysitterCardProps) => {
+//   return (
+//     <View style={styles.card}>
+//       <View style={styles.cardTop}>
+//         <View style={styles.imageWrapper}>
+//           <Image source={{ uri: item.photo }} style={styles.avatar} />
+//           {item.isOnline && <View style={styles.onlineDot} />}
+//         </View>
+
+//         <View style={styles.cardInfo}>
+//           <Text style={styles.name}>{item.name}</Text>
+
+//           <View style={styles.row}>
+//             <FontAwesome name="star" size={14} color="#FF768A" />
+//             <Text style={styles.ratingText}>{item.rating}</Text>
+//             <Text style={styles.experienceText}>• {item.experience}</Text>
+//           </View>
+
+//           <View style={styles.row}>
+//             <Ionicons name="location-outline" size={13} color="#8D8D8D" />
+//             <Text style={styles.locationText}>{item.location}</Text>
+//           </View>
+
+//           <View style={styles.row}>
+//             <Ionicons name="time-outline" size={13} color="#886BC1" />
+//             <Text style={styles.priceText}>${item.hourlyRate}/hora</Text>
+//           </View>
+//         </View>
+//       </View>
+
+//       <TouchableOpacity
+//         style={styles.profileButton}
+//         onPress={() => onViewProfile(item.id)}
+//         activeOpacity={0.8}
+//       >
+//         <Text style={styles.profileButtonText}>Ver perfil</Text>
+//       </TouchableOpacity>
+//     </View>
+//   );
+// };
+
+// interface HomeScreenProps {
+//   userName: string;
+//   onViewProfile: (id: number) => void;
+//   onNavigate: (screen: string) => void;
+// }
+
+// export default function HomeScreen({
+//   userName,
+//   onViewProfile,
+//   onNavigate,
+// }: HomeScreenProps) {
+//   const [searchText, setSearchText] = useState("");
+//   const [selectedFilter, setSelectedFilter] =
+//     useState<FilterType>("Disponibles");
+
+//   const filteredBabysitters = useMemo(() => {
+//     let result = [...babysittersData];
+
+//     if (searchText.trim()) {
+//       const text = searchText.toLowerCase();
+//       result = result.filter(
+//         (item) =>
+//           item.name.toLowerCase().includes(text) ||
+//           item.location.toLowerCase().includes(text) ||
+//           item.experience.toLowerCase().includes(text),
+//       );
+//     }
+
+//     switch (selectedFilter) {
+//       case "Disponibles":
+//         result = result.filter((item) => item.isAvailable);
+//         break;
+//       case "Cerca de ti":
+//         result = [...result].sort((a, b) => a.distanceKm - b.distanceKm);
+//         break;
+//       case "Mejor valoradas":
+//         result = [...result].sort((a, b) => b.rating - a.rating);
+//         break;
+//       case "Certificadas":
+//         result = result.filter((item) => item.certified);
+//         break;
+//       default:
+//         break;
+//     }
+
+//     return result;
+//   }, [searchText, selectedFilter]);
+
+//   const renderHeader = () => (
+//     <LinearGradient
+//       colors={["#886BC1", "#FF768A"]}
+//       start={{ x: 0, y: 0 }}
+//       end={{ x: 1, y: 0 }}
+//       style={styles.header}
+//     >
+//       <Text style={styles.greeting}>Hola, {userName} 👋</Text>
+
+//       <View style={styles.searchContainer}>
+//         <Feather
+//           name="search"
+//           size={20}
+//           color="#A0A0A0"
+//           style={styles.searchIcon}
+//         />
+//         <TextInput
+//           placeholder="Buscar niñera..."
+//           placeholderTextColor="#A0A0A0"
+//           style={styles.searchInput}
+//           value={searchText}
+//           onChangeText={setSearchText}
+//         />
+//       </View>
+
+//       <View style={styles.filtersRow}>
+//         <TouchableOpacity
+//           style={[
+//             styles.filterChip,
+//             selectedFilter === "Disponibles" && styles.filterChipActive,
+//           ]}
+//           onPress={() => setSelectedFilter("Disponibles")}
+//         >
+//           <Text style={styles.filterText}>Disponibles</Text>
+//         </TouchableOpacity>
+
+//         <TouchableOpacity
+//           style={[
+//             styles.filterChip,
+//             selectedFilter === "Cerca de ti" && styles.filterChipActive,
+//           ]}
+//           onPress={() => setSelectedFilter("Cerca de ti")}
+//         >
+//           <Text style={styles.filterText}>Cerca de ti</Text>
+//         </TouchableOpacity>
+
+//         <TouchableOpacity
+//           style={styles.filterIconButton}
+//           onPress={() => setSelectedFilter("Mejor valoradas")}
+//         >
+//           <MaterialIcons name="tune" size={18} color="#FFFFFF" />
+//         </TouchableOpacity>
+//       </View>
+//     </LinearGradient>
+//   );
+
+//   const renderFooter = () => <View style={{ height: 100 }} />;
+
+//   return (
+//     <SafeAreaView style={styles.safeArea}>
+//       <StatusBar barStyle="light-content" />
+
+//       <View style={styles.container}>
+//         <FlatList
+//           data={filteredBabysitters}
+//           keyExtractor={(item) => item.id.toString()}
+//           renderItem={({ item }) => (
+//             <BabysitterCard item={item} onViewProfile={onViewProfile} />
+//           )}
+//           ListHeaderComponent={
+//             <View>
+//               {renderHeader()}
+
+//               <View style={styles.content}>
+//                 <Text style={styles.sectionTitle}>Niñeras disponibles</Text>
+//               </View>
+//             </View>
+//           }
+//           ListFooterComponent={renderFooter}
+//           contentContainerStyle={styles.listContent}
+//           showsVerticalScrollIndicator={false}
+//         />
+
+//         <View style={styles.bottomNav}>
+//           <TouchableOpacity style={styles.navItem}>
+//             <Ionicons name="home-outline" size={22} color="#886BC1" />
+//             <Text style={[styles.navText, { color: "#886BC1" }]}>Inicio</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             style={styles.navItem}
+//             onPress={() => onNavigate("bookings")}
+//           >
+//             <Ionicons name="time-outline" size={22} color="#B0B0B0" />
+//             <Text style={styles.navText}>Reservas</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             style={styles.navItem}
+//             onPress={() => onNavigate("chat")}
+//           >
+//             <View style={styles.chatIconWrapper}>
+//               <Ionicons
+//                 name="chatbubble-ellipses-outline"
+//                 size={22}
+//                 color="#B0B0B0"
+//               />
+//               <View style={styles.notificationDot} />
+//             </View>
+//             <Text style={styles.navText}>Chat</Text>
+//           </TouchableOpacity>
+
+//           <TouchableOpacity
+//             style={styles.navItem}
+//             onPress={() => onNavigate("profile")}
+//           >
+//             <Ionicons name="person-outline" size={22} color="#B0B0B0" />
+//             <Text style={styles.navText}>Perfil</Text>
+//           </TouchableOpacity>
+//         </View>
+//       </View>
+//     </SafeAreaView>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   safeArea: {
+//     flex: 1,
+//     backgroundColor: "#FAFAFA",
+//   },
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#FAFAFA",
+//   },
+//   listContent: {
+//     paddingBottom: 0,
+//   },
+//   header: {
+//     paddingTop: 25,
+//     paddingHorizontal: 16,
+//     paddingBottom: 18,
+//     borderBottomLeftRadius: 28,
+//     borderBottomRightRadius: 28,
+//   },
+//   greeting: {
+//     color: "#FFFFFF",
+//     fontSize: 22,
+//     fontWeight: "700",
+//     marginBottom: 16,
+//   },
+//   searchContainer: {
+//     backgroundColor: "#FFFFFF",
+//     borderRadius: 16,
+//     height: 52,
+//     justifyContent: "center",
+//     marginBottom: 14,
+//     position: "relative",
+//     paddingLeft: 42,
+//     paddingRight: 14,
+//   },
+//   searchIcon: {
+//     position: "absolute",
+//     left: 14,
+//     top: 16,
+//     zIndex: 1,
+//   },
+//   searchInput: {
+//     fontSize: 15,
+//     color: "#2E2E2E",
+//   },
+//   filtersRow: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     justifyContent: "space-between",
+//   },
+//   filterChip: {
+//     backgroundColor: "rgba(255,255,255,0.18)",
+//     paddingHorizontal: 16,
+//     paddingVertical: 9,
+//     borderRadius: 999,
+//   },
+//   filterChipActive: {
+//     backgroundColor: "rgba(255,255,255,0.28)",
+//   },
+//   filterText: {
+//     color: "#FFFFFF",
+//     fontSize: 13,
+//     fontWeight: "500",
+//   },
+//   filterIconButton: {
+//     width: 40,
+//     height: 40,
+//     borderRadius: 999,
+//     backgroundColor: "rgba(255,255,255,0.18)",
+//     justifyContent: "center",
+//     alignItems: "center",
+//   },
+//   content: {
+//     paddingHorizontal: 16,
+//     paddingTop: 18,
+//     paddingBottom: 8,
+//   },
+//   sectionTitle: {
+//     fontSize: 20,
+//     fontWeight: "700",
+//     color: "#2E2E2E",
+//   },
+//   card: {
+//     backgroundColor: "#FFFFFF",
+//     marginHorizontal: 16,
+//     marginBottom: 14,
+//     borderRadius: 20,
+//     padding: 14,
+//     borderWidth: 1,
+//     borderColor: "#EEEEEE",
+//   },
+//   cardTop: {
+//     flexDirection: "row",
+//     gap: 12,
+//   },
+//   imageWrapper: {
+//     position: "relative",
+//   },
+//   avatar: {
+//     width: 72,
+//     height: 72,
+//     borderRadius: 36,
+//   },
+//   onlineDot: {
+//     position: "absolute",
+//     bottom: 0,
+//     right: 0,
+//     width: 18,
+//     height: 18,
+//     borderRadius: 9,
+//     backgroundColor: "#22C55E",
+//     borderWidth: 2,
+//     borderColor: "#FFFFFF",
+//   },
+//   cardInfo: {
+//     flex: 1,
+//     justifyContent: "center",
+//   },
+//   name: {
+//     color: "#2E2E2E",
+//     fontSize: 17,
+//     fontWeight: "700",
+//     marginBottom: 6,
+//   },
+//   row: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//     marginBottom: 5,
+//   },
+//   ratingText: {
+//     marginLeft: 4,
+//     color: "#2E2E2E",
+//     fontSize: 14,
+//     fontWeight: "600",
+//   },
+//   experienceText: {
+//     marginLeft: 6,
+//     color: "#9A9A9A",
+//     fontSize: 13,
+//   },
+//   locationText: {
+//     marginLeft: 4,
+//     color: "#8D8D8D",
+//     fontSize: 13,
+//   },
+//   priceText: {
+//     marginLeft: 4,
+//     color: "#886BC1",
+//     fontSize: 13,
+//     fontWeight: "700",
+//   },
+//   profileButton: {
+//     marginTop: 14,
+//     backgroundColor: "#FF768A",
+//     borderRadius: 16,
+//     paddingVertical: 13,
+//     alignItems: "center",
+//   },
+//   profileButtonText: {
+//     color: "#FFFFFF",
+//     fontSize: 15,
+//     fontWeight: "700",
+//   },
+//   bottomNav: {
+//     position: "absolute",
+//     bottom: 0,
+//     left: 0,
+//     right: 0,
+//     backgroundColor: "#FFFFFF",
+//     borderTopWidth: 1,
+//     borderTopColor: "#F0F0F0",
+//     borderTopLeftRadius: 24,
+//     borderTopRightRadius: 24,
+//     paddingTop: 12,
+//     paddingBottom: 18,
+//     flexDirection: "row",
+//     justifyContent: "space-around",
+//     alignItems: "center",
+//     shadowColor: "#000",
+//     shadowOpacity: 0.08,
+//     shadowRadius: 8,
+//     elevation: 8,
+//   },
+//   navItem: {
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+//   navText: {
+//     marginTop: 4,
+//     fontSize: 12,
+//     color: "#B0B0B0",
+//   },
+//   chatIconWrapper: {
+//     position: "relative",
+//   },
+//   notificationDot: {
+//     position: "absolute",
+//     top: 0,
+//     right: -1,
+//     width: 8,
+//     height: 8,
+//     borderRadius: 4,
+//     backgroundColor: "#FF768A",
+//   },
+// });
+
 import {
   Feather,
+  FontAwesome,
   Ionicons,
   MaterialIcons,
-  FontAwesome,
 } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
+import {
+  FlatList,
+  Image,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 type Babysitter = {
   id: number;
@@ -594,26 +1075,14 @@ const BabysitterCard = ({ item, onViewProfile }: BabysitterCardProps) => {
   );
 };
 
-/* =========================================================
-   PARTE IMPORTANTE 1:
-   AQUÍ SE AGREGA userName PARA QUE EL NOMBRE SEA DINÁMICO
-   ========================================================= */
-interface HomeScreenProps {
-  userName: string;
-  onViewProfile: (id: number) => void;
-  onNavigate: (screen: string) => void;
-}
-
-export default function HomeScreen({
-  userName,
-  onViewProfile,
-  onNavigate,
-}: HomeScreenProps) {
+export default function HomeScreen() {
+  const router = useRouter();
   const [searchText, setSearchText] = useState("");
   const [selectedFilter, setSelectedFilter] =
     useState<FilterType>("Disponibles");
 
-  // Esto luego lo puedes traer desde una API
+  const userName = "Jairo";
+
   const [babysitters] = useState<Babysitter[]>([
     {
       id: 1,
@@ -682,7 +1151,7 @@ export default function HomeScreen({
         (item) =>
           item.name.toLowerCase().includes(text) ||
           item.location.toLowerCase().includes(text) ||
-          item.experience.toLowerCase().includes(text)
+          item.experience.toLowerCase().includes(text),
       );
     }
 
@@ -706,6 +1175,17 @@ export default function HomeScreen({
     return result;
   }, [babysitters, searchText, selectedFilter]);
 
+  const handleViewProfile = (id: number) => {
+    router.push({
+      pathname: "/register/client/BabysitterProfile",
+      params: { babysitterId: id.toString() },
+    });
+  };
+
+  const handleNavigate = (screen: string) => {
+    console.log("Ir a:", screen);
+  };
+
   const renderHeader = () => (
     <LinearGradient
       colors={["#886BC1", "#FF768A"]}
@@ -713,15 +1193,6 @@ export default function HomeScreen({
       end={{ x: 1, y: 0 }}
       style={styles.header}
     >
-      {/* =========================================================
-          PARTE IMPORTANTE 2:
-          ESTA ES LA LÍNEA QUE CAMBIA EL TEXTO ESTÁTICO
-          ANTES ESTABA ASÍ:
-          <Text style={styles.greeting}>Hola, Jairo 👋</Text>
-
-          AHORA ESTÁ DINÁMICO ASÍ:
-          <Text style={styles.greeting}>Hola, {userName} 👋</Text>
-         ========================================================= */}
       <Text style={styles.greeting}>Hola, {userName} 👋</Text>
 
       <View style={styles.searchContainer}>
@@ -782,7 +1253,7 @@ export default function HomeScreen({
           data={filteredBabysitters}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <BabysitterCard item={item} onViewProfile={onViewProfile} />
+            <BabysitterCard item={item} onViewProfile={handleViewProfile} />
           )}
           ListHeaderComponent={
             <View>
@@ -806,7 +1277,7 @@ export default function HomeScreen({
 
           <TouchableOpacity
             style={styles.navItem}
-            onPress={() => onNavigate("bookings")}
+            onPress={() => handleNavigate("bookings")}
           >
             <Ionicons name="time-outline" size={22} color="#B0B0B0" />
             <Text style={styles.navText}>Reservas</Text>
@@ -814,7 +1285,7 @@ export default function HomeScreen({
 
           <TouchableOpacity
             style={styles.navItem}
-            onPress={() => onNavigate("chat")}
+            onPress={() => handleNavigate("chat")}
           >
             <View style={styles.chatIconWrapper}>
               <Ionicons
@@ -829,7 +1300,7 @@ export default function HomeScreen({
 
           <TouchableOpacity
             style={styles.navItem}
-            onPress={() => onNavigate("profile")}
+            onPress={() => handleNavigate("profile")}
           >
             <Ionicons name="person-outline" size={22} color="#B0B0B0" />
             <Text style={styles.navText}>Perfil</Text>
@@ -853,7 +1324,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0,
   },
   header: {
-    paddingTop: 22,
+    paddingTop: 25,
     paddingHorizontal: 16,
     paddingBottom: 18,
     borderBottomLeftRadius: 28,
