@@ -79,7 +79,7 @@ export default function LoginScreen() {
           <TouchableOpacity
             style={styles.loginButton}
             onPress={() =>
-              router.push("/register/babysister/BabysitterDashboard")
+              router.push("/register/babysister/BabysitterWelcomeSetup")
             }
           >
             /* para entrar al dashboard de ninera cambiar
