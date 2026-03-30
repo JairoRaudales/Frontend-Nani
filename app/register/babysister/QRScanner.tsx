@@ -1,19 +1,17 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { BarCodeScanner } from "expo-barcode-scanner";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { MapPin } from "lucide-react-native";
+import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-interface QRScannerProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface Props {
   onScanSuccess: (data: any) => void;
   expectedLocation: {
     address: string;
@@ -23,132 +21,107 @@ interface QRScannerProps {
   type: "checkin" | "checkout";
 }
 
-export default function QRScanner({
-  isOpen,
-  onClose,
-  onScanSuccess,
-  expectedLocation,
-  type,
-}: QRScannerProps) {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+export default function QRScanner() {
+  const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [locationChecking, setLocationChecking] = useState(false);
+  const [checkingLocation, setCheckingLocation] = useState(false);
+  const {
+    bookingId,
+    type,
+    address,
+    latitude,
+    longitude,
+    clientName,
+    clientPhoto,
+    scheduledHours,
+    hourlyRate,
+    checkInTime,
+    totalHours,
+  } = useLocalSearchParams();
 
   useEffect(() => {
-    if (isOpen) {
-      requestPermissions();
+    if (!permission) {
+      requestPermission();
     }
-  }, [isOpen]);
+  }, [permission]);
 
-  // ✅ Permisos
-  const requestPermissions = async () => {
-    try {
-      const { status: cameraStatus } =
-        await BarCodeScanner.requestPermissionsAsync();
-
-      const { status: locStatus } =
-        await Location.requestForegroundPermissionsAsync();
-
-      if (cameraStatus === "granted" && locStatus === "granted") {
-        setHasPermission(true);
-      } else {
-        setError("Permisos de cámara o ubicación denegados");
-        setHasPermission(false);
-      }
-    } catch {
-      setError("Error solicitando permisos");
-      setHasPermission(false);
+  const handleScan = async ({ data }: any) => {
+    if (type === "checkout") {
+      router.replace({
+        pathname: "./SessionSummary",
+        params: {
+          bookingId,
+          checkOutTime: Date.now(),
+        },
+      });
     }
-  };
 
-  // ✅ Escaneo QR
-  const handleBarCodeScanned = async ({ data }: { data: string }) => {
     setScanned(true);
 
     try {
-      setLocationChecking(true);
+      setCheckingLocation(true);
 
-      // Parse seguro
-      let qrData: any;
-      try {
-        qrData = JSON.parse(data);
-      } catch {
-        throw new Error("QR inválido");
-      }
+      const qrData = JSON.parse(data);
 
-      // Validar tipo
       if (qrData.type !== type) {
-        setError(
-          `Este código es para ${
-            qrData.type === "checkin" ? "entrada" : "salida"
-          }`,
-        );
-        resetScanner();
+        setError("Este QR no corresponde a esta acción.");
+        setCheckingLocation(false);
         return;
       }
 
-      // Obtener ubicación
-      const userLocation = await getCurrentLocation();
+      const location = await Location.getCurrentPositionAsync({});
 
-      // Calcular distancia
       const distance = calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        qrData.location.latitude,
-        qrData.location.longitude,
+        location.coords.latitude,
+        location.coords.longitude,
+        Number(latitude),
+        Number(longitude),
       );
 
       if (distance > 0.1) {
-        setError("No estás en la ubicación correcta");
-        resetScanner();
+        setError("No estás en la ubicación correcta.");
+        setCheckingLocation(false);
         return;
       }
+    } catch (err) {
+      setError("QR inválido");
+      setCheckingLocation(false);
+    }
 
-      // ✅ Éxito
-      onScanSuccess({
-        ...qrData,
-        scannedAt: Date.now(),
-        location: userLocation,
+    if (type === "checkin") {
+      router.replace({
+        pathname: "./ActiveSession",
+        params: {
+          bookingId,
+          checkInTime: Date.now(),
+        },
       });
+    }
 
-      setLocationChecking(false);
-      onClose();
-    } catch (err: any) {
-      setError(err.message || "Error procesando QR");
-      resetScanner();
+    if (type === "checkout") {
+      router.replace({
+        pathname: "./SessionSummary",
+        params: {
+          bookingId,
+          clientName,
+          clientPhoto,
+          scheduledHours,
+          hourlyRate,
+          checkInTime,
+          checkOutTime: Date.now(),
+          totalHours,
+        },
+      });
     }
   };
 
-  // ✅ Reset limpio
-  const resetScanner = () => {
-    setLocationChecking(false);
-    setScanned(false);
-  };
-
-  // ✅ Ubicación
-  const getCurrentLocation = async () => {
-    try {
-      const loc = await Location.getCurrentPositionAsync({});
-      return {
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      };
-    } catch {
-      return {
-        latitude: expectedLocation.latitude,
-        longitude: expectedLocation.longitude,
-      };
-    }
-  };
-
-  // ✅ Distancia (Haversine)
   const calculateDistance = (
     lat1: number,
     lon1: number,
     lat2: number,
     lon2: number,
-  ): number => {
+  ) => {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLon = ((lon2 - lon1) * Math.PI) / 180;
@@ -163,192 +136,76 @@ export default function QRScanner({
     return R * c;
   };
 
-  return (
-    <Modal visible={isOpen} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          {/* TITLE */}
-          <Text style={styles.title}>
-            {type === "checkin"
-              ? "Escanear QR - Entrada"
-              : "Escanear QR - Salida"}
-          </Text>
-
-          {/* SCANNER */}
-          {!error && !locationChecking && hasPermission && (
-            <View style={styles.scannerBox}>
-              <BarCodeScanner
-                onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-                style={StyleSheet.absoluteFillObject}
-              />
-
-              <View style={styles.scanOverlay}>
-                <Ionicons name="camera" size={18} color="#FF768A" />
-                <Text style={styles.scanText}>Apunta al código QR...</Text>
-              </View>
-            </View>
-          )}
-
-          {/* LOADING */}
-          {locationChecking && (
-            <View style={styles.centerBox}>
-              <ActivityIndicator size="large" color="#886BC1" />
-              <Text style={{ marginTop: 10 }}>Verificando ubicación...</Text>
-            </View>
-          )}
-
-          {/* ERROR */}
-          {error && (
-            <View style={styles.errorBox}>
-              <Feather name="x-circle" size={40} color="red" />
-              <Text style={styles.errorText}>{error}</Text>
-
-              <TouchableOpacity
-                style={styles.retryBtn}
-                onPress={() => {
-                  setError(null);
-                  resetScanner();
-                }}
-              >
-                <Text style={{ color: "white" }}>Intentar de nuevo</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* UBICACIÓN */}
-          {!error && !locationChecking && (
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Ubicación esperada:</Text>
-              <Text>{expectedLocation.address}</Text>
-            </View>
-          )}
-
-          {/* BOTONES */}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text>Cancelar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.mockBtn}
-              onPress={() => {
-                onScanSuccess({
-                  type,
-                  scannedAt: Date.now(),
-                  location: {
-                    latitude: expectedLocation.latitude,
-                    longitude: expectedLocation.longitude,
-                  },
-                });
-                onClose();
-              }}
-            >
-              <Text style={{ color: "white" }}>Simular QR ✓</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+  if (!permission?.granted) {
+    return (
+      <View style={styles.center}>
+        <Text>Permiso de cámara requerido</Text>
       </View>
-    </Modal>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {!checkingLocation && !error && (
+        <CameraView
+          style={styles.camera}
+          barcodeScannerSettings={{
+            barcodeTypes: ["qr"],
+          }}
+          onBarcodeScanned={handleScan}
+        />
+      )}
+
+      {checkingLocation && (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" />
+          <Text>Verificando ubicación...</Text>
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.center}>
+          <Text style={{ color: "red" }}>{error}</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setError(null);
+              setScanned(false);
+            }}
+          >
+            <Text>Intentar de nuevo</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <View style={styles.locationBox}>
+        <MapPin size={18} color="#FF768A" />
+        <Text style={styles.locationText}>{address}</Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
+  container: { flex: 1 },
+  camera: { flex: 1 },
+  center: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
     justifyContent: "center",
-    padding: 20,
+    alignItems: "center",
   },
-
-  container: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-  },
-
-  title: {
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
-
-  scannerBox: {
-    height: 250,
-    borderRadius: 15,
-    overflow: "hidden",
-    marginBottom: 15,
-  },
-
-  scanOverlay: {
+  locationBox: {
     position: "absolute",
-    top: 10,
-    left: 10,
-    right: 10,
+    bottom: 40,
+    left: 20,
+    right: 20,
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 12,
     flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.8)",
-    padding: 8,
-    borderRadius: 20,
     alignItems: "center",
-  },
-
-  scanText: {
-    marginLeft: 5,
-    fontSize: 12,
-  },
-
-  centerBox: {
-    alignItems: "center",
-    padding: 30,
-  },
-
-  errorBox: {
-    alignItems: "center",
-    padding: 20,
-  },
-
-  errorText: {
-    color: "red",
-    marginVertical: 10,
-    textAlign: "center",
-  },
-
-  retryBtn: {
-    backgroundColor: "#FF768A",
-    padding: 10,
-    borderRadius: 10,
-  },
-
-  infoBox: {
-    backgroundColor: "#FFF5F7",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-
-  infoLabel: {
-    fontSize: 12,
-    color: "#777",
-  },
-
-  actions: {
-    flexDirection: "row",
     gap: 10,
   },
-
-  cancelBtn: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: "#eee",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  mockBtn: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: "#886BC1",
-    borderRadius: 10,
-    alignItems: "center",
+  locationText: {
+    fontSize: 14,
   },
 });

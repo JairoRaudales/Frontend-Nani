@@ -1,354 +1,353 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
-import { BarCodeScanner } from "expo-barcode-scanner";
-import * as Location from "expo-location";
-import React, { useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
 import {
-    ActivityIndicator,
-    Modal,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  AlertCircle,
+  Clock,
+  DollarSign,
+  MapPin,
+  QrCode,
+} from "lucide-react-native";
+import { useEffect, useState } from "react";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-interface QRScannerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onScanSuccess: (data: any) => void;
-  expectedLocation: {
-    address: string;
-    latitude: number;
-    longitude: number;
-  };
-  type: "checkin" | "checkout";
-}
+export default function ActiveSession() {
+  const {
+    bookingId,
+    clientName,
+    clientPhoto,
+    address,
+    scheduledHours,
+    hourlyRate,
+    children,
+    childrenDetails,
+    latitude,
+    longitude,
+    checkInTime,
+  } = useLocalSearchParams();
 
-export default function QRScanner({
-  isOpen,
-  onClose,
-  onScanSuccess,
-  expectedLocation,
-  type,
-}: QRScannerProps) {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
-  const [scanned, setScanned] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [locationChecking, setLocationChecking] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
-    if (isOpen) {
-      requestPermissions();
-    }
-  }, [isOpen]);
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const elapsed = Math.floor((now - Number(checkInTime)) / 1000);
+      setElapsedTime(elapsed);
+    }, 1000);
 
-  // ✅ Permisos
-  const requestPermissions = async () => {
-    try {
-      const { status: cameraStatus } =
-        await BarCodeScanner.requestPermissionsAsync();
+    return () => clearInterval(interval);
+  }, []);
 
-      const { status: locStatus } =
-        await Location.requestForegroundPermissionsAsync();
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
 
-      if (cameraStatus === "granted" && locStatus === "granted") {
-        setHasPermission(true);
-      } else {
-        setError("Permisos de cámara o ubicación denegados");
-        setHasPermission(false);
-      }
-    } catch {
-      setError("Error solicitando permisos");
-      setHasPermission(false);
-    }
+    return `${hours.toString().padStart(2, "0")}:${minutes
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // ✅ Escaneo QR
-  const handleBarCodeScanned = async ({ data }: { data: string }) => {
-    setScanned(true);
+  const totalHours = elapsedTime / 3600;
+  const scheduledSeconds = Number(scheduledHours) * 3600;
 
-    try {
-      setLocationChecking(true);
+  const isOvertime = elapsedTime > scheduledSeconds;
+  const overtimeSeconds = isOvertime ? elapsedTime - scheduledSeconds : 0;
+  const overtimeHours = overtimeSeconds / 3600;
 
-      // Parse seguro
-      let qrData: any;
-      try {
-        qrData = JSON.parse(data);
-      } catch {
-        throw new Error("QR inválido");
-      }
-
-      // Validar tipo
-      if (qrData.type !== type) {
-        setError(
-          `Este código es para ${
-            qrData.type === "checkin" ? "entrada" : "salida"
-          }`,
-        );
-        resetScanner();
-        return;
-      }
-
-      // Obtener ubicación
-      const userLocation = await getCurrentLocation();
-
-      // Calcular distancia
-      const distance = calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        qrData.location.latitude,
-        qrData.location.longitude,
-      );
-
-      if (distance > 0.1) {
-        setError("No estás en la ubicación correcta");
-        resetScanner();
-        return;
-      }
-
-      // ✅ Éxito
-      onScanSuccess({
-        ...qrData,
-        scannedAt: Date.now(),
-        location: userLocation,
-      });
-
-      setLocationChecking(false);
-      onClose();
-    } catch (err: any) {
-      setError(err.message || "Error procesando QR");
-      resetScanner();
-    }
-  };
-
-  // ✅ Reset limpio
-  const resetScanner = () => {
-    setLocationChecking(false);
-    setScanned(false);
-  };
-
-  // ✅ Ubicación
-  const getCurrentLocation = async () => {
-    try {
-      const loc = await Location.getCurrentPositionAsync({});
-      return {
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      };
-    } catch {
-      return {
-        latitude: expectedLocation.latitude,
-        longitude: expectedLocation.longitude,
-      };
-    }
-  };
-
-  // ✅ Distancia (Haversine)
-  const calculateDistance = (
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number,
-  ): number => {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) ** 2;
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+  const basePay = Number(scheduledHours) * Number(hourlyRate);
+  const overtimePay = overtimeHours * Number(hourlyRate);
+  const totalPay = basePay + overtimePay;
 
   return (
-    <Modal visible={isOpen} animationType="slide" transparent>
-      <View style={styles.overlay}>
-        <View style={styles.container}>
-          {/* TITLE */}
-          <Text style={styles.title}>
-            {type === "checkin"
-              ? "Escanear QR - Entrada"
-              : "Escanear QR - Salida"}
-          </Text>
+    <ScrollView style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Sesión Activa</Text>
+        <Text style={styles.headerSubtitle}>En progreso</Text>
 
-          {/* SCANNER */}
-          {!error && !locationChecking && hasPermission && (
-            <View style={styles.scannerBox}>
-              <BarCodeScanner
-                onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-                style={StyleSheet.absoluteFillObject}
-              />
+        <View style={styles.timerBox}>
+          <Text style={styles.timerLabel}>Tiempo transcurrido</Text>
+          <Text style={styles.timer}>{formatTime(elapsedTime)}</Text>
 
-              <View style={styles.scanOverlay}>
-                <Ionicons name="camera" size={18} color="#FF768A" />
-                <Text style={styles.scanText}>Apunta al código QR...</Text>
-              </View>
-            </View>
-          )}
-
-          {/* LOADING */}
-          {locationChecking && (
-            <View style={styles.centerBox}>
-              <ActivityIndicator size="large" color="#886BC1" />
-              <Text style={{ marginTop: 10 }}>Verificando ubicación...</Text>
-            </View>
-          )}
-
-          {/* ERROR */}
-          {error && (
-            <View style={styles.errorBox}>
-              <Feather name="x-circle" size={40} color="red" />
-              <Text style={styles.errorText}>{error}</Text>
-
-              <TouchableOpacity
-                style={styles.retryBtn}
-                onPress={() => {
-                  setError(null);
-                  resetScanner();
-                }}
-              >
-                <Text style={{ color: "white" }}>Intentar de nuevo</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* UBICACIÓN */}
-          {!error && !locationChecking && (
-            <View style={styles.infoBox}>
-              <Text style={styles.infoLabel}>Ubicación esperada:</Text>
-              <Text>{expectedLocation.address}</Text>
-            </View>
-          )}
-
-          {/* BOTONES */}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
-              <Text>Cancelar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.mockBtn}
-              onPress={() => {
-                onScanSuccess({
-                  type,
-                  scannedAt: Date.now(),
-                  location: {
-                    latitude: expectedLocation.latitude,
-                    longitude: expectedLocation.longitude,
-                  },
-                });
-                onClose();
-              }}
-            >
-              <Text style={{ color: "white" }}>Simular QR ✓</Text>
-            </TouchableOpacity>
+          <View style={styles.rowCenter}>
+            <Clock color="#fff" size={16} />
+            <Text style={styles.scheduledText}>
+              Programado: {scheduledHours}h
+            </Text>
           </View>
         </View>
       </View>
-    </Modal>
+
+      <View style={styles.content}>
+        {/* ALERTA TIEMPO EXTRA */}
+        {isOvertime && (
+          <View style={styles.overtimeBox}>
+            <AlertCircle color="#F97316" size={24} />
+            <View>
+              <Text style={styles.overtimeTitle}>Tiempo Extra</Text>
+              <Text style={styles.overtimeText}>
+                Has excedido el tiempo por {formatTime(overtimeSeconds)}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {/* CLIENT INFO */}
+        <View style={styles.card}>
+          <View style={styles.clientRow}>
+            <Image
+              source={{ uri: clientPhoto as string }}
+              style={styles.avatar}
+            />
+
+            <View>
+              <Text style={styles.clientName}>{clientName}</Text>
+              <Text style={styles.grayText}>{children} niños</Text>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <MapPin color="#886BC1" size={20} />
+            <View>
+              <Text style={styles.label}>Ubicación</Text>
+              <Text style={styles.value}>{address}</Text>
+            </View>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Clock color="#886BC1" size={20} />
+            <View>
+              <Text style={styles.label}>Niños a cuidar</Text>
+              <Text style={styles.value}>{childrenDetails}</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* PAYMENT */}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <DollarSign color="#886BC1" size={20} />
+            <Text style={styles.cardTitle}>Resumen de Pago</Text>
+          </View>
+
+          <View style={styles.paymentRow}>
+            <Text style={styles.grayText}>
+              Horas programadas ({scheduledHours}h)
+            </Text>
+            <Text>${basePay.toFixed(2)}</Text>
+          </View>
+
+          {overtimeHours > 0 && (
+            <View style={styles.paymentRow}>
+              <Text style={{ color: "#F97316" }}>
+                Tiempo extra ({overtimeHours.toFixed(2)}h)
+              </Text>
+              <Text style={{ color: "#F97316" }}>
+                +${overtimePay.toFixed(2)}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalText}>Total estimado</Text>
+            <Text style={styles.totalAmount}>${totalPay.toFixed(2)}</Text>
+          </View>
+
+          <Text style={styles.timeInfo}>
+            Tiempo actual: {totalHours.toFixed(2)} horas
+          </Text>
+        </View>
+
+        {/* PROGRESS */}
+        <View style={styles.card}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.grayText}>Progreso</Text>
+
+            <Text style={styles.progressPercent}>
+              {Math.min(100, (elapsedTime / scheduledSeconds) * 100).toFixed(0)}
+              %
+            </Text>
+          </View>
+
+          <View style={styles.progressBar}>
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width: `${Math.min(
+                    100,
+                    (elapsedTime / scheduledSeconds) * 100,
+                  )}%`,
+                  backgroundColor: isOvertime ? "#F97316" : "#FF768A",
+                },
+              ]}
+            />
+          </View>
+        </View>
+
+        {/* BOTÓN SALIDA */}
+        <TouchableOpacity
+          style={styles.checkoutButton}
+          onPress={() =>
+            router.push({
+              pathname: "./QRScanner",
+              params: {
+                type: "checkout",
+                bookingId,
+                address,
+                latitude,
+                longitude,
+              },
+            })
+          }
+        >
+          <QrCode color="#fff" size={20} />
+          <Text style={styles.checkoutText}>Marcar Salida</Text>
+        </TouchableOpacity>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            Para finalizar la sesión escanea el código QR que mostrará el
+            cliente. Se verificará tu ubicación automáticamente.
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    padding: 20,
+  container: { flex: 1, backgroundColor: "#FAFAFA" },
+
+  header: {
+    backgroundColor: "#886BC1",
+    paddingTop: 60,
+    paddingBottom: 30,
+    paddingHorizontal: 20,
   },
 
-  container: {
-    backgroundColor: "white",
+  headerTitle: { color: "#fff", fontSize: 24, fontWeight: "bold" },
+  headerSubtitle: { color: "#fff", opacity: 0.8 },
+
+  timerBox: {
+    marginTop: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    padding: 20,
     borderRadius: 20,
+    alignItems: "center",
+  },
+
+  timerLabel: { color: "#fff", opacity: 0.8 },
+  timer: { color: "#fff", fontSize: 40, fontWeight: "bold" },
+
+  rowCenter: { flexDirection: "row", alignItems: "center", gap: 6 },
+  scheduledText: { color: "#fff", marginLeft: 5 },
+
+  content: { padding: 20, gap: 20 },
+
+  card: {
+    backgroundColor: "#fff",
     padding: 20,
+    borderRadius: 20,
   },
 
-  title: {
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 15,
-  },
+  clientRow: { flexDirection: "row", alignItems: "center", gap: 12 },
 
-  scannerBox: {
-    height: 250,
-    borderRadius: 15,
-    overflow: "hidden",
-    marginBottom: 15,
-  },
+  avatar: { width: 60, height: 60, borderRadius: 30 },
 
-  scanOverlay: {
-    position: "absolute",
-    top: 10,
-    left: 10,
-    right: 10,
+  clientName: { fontSize: 18, fontWeight: "600" },
+
+  grayText: { color: "#666" },
+
+  infoRow: {
     flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.8)",
-    padding: 8,
-    borderRadius: 20,
     alignItems: "center",
+    gap: 10,
+    marginTop: 10,
   },
 
-  scanText: {
-    marginLeft: 5,
-    fontSize: 12,
+  label: { fontSize: 12, color: "#888" },
+
+  value: { fontSize: 14 },
+
+  cardTitle: { fontSize: 18, fontWeight: "600", marginLeft: 5 },
+
+  row: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
+
+  paymentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 5,
   },
 
-  centerBox: {
-    alignItems: "center",
-    padding: 30,
+  totalRow: {
+    borderTopWidth: 1,
+    borderColor: "#eee",
+    marginTop: 10,
+    paddingTop: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 
-  errorBox: {
-    alignItems: "center",
-    padding: 20,
+  totalText: { fontWeight: "600" },
+
+  totalAmount: { fontSize: 24, color: "#886BC1", fontWeight: "bold" },
+
+  timeInfo: { textAlign: "center", marginTop: 8, fontSize: 12, color: "#888" },
+
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 5,
   },
 
-  errorText: {
-    color: "red",
-    marginVertical: 10,
-    textAlign: "center",
+  progressPercent: { color: "#886BC1" },
+
+  progressBar: {
+    height: 10,
+    backgroundColor: "#eee",
+    borderRadius: 10,
   },
 
-  retryBtn: {
+  progressFill: { height: 10, borderRadius: 10 },
+
+  checkoutButton: {
     backgroundColor: "#FF768A",
-    padding: 10,
-    borderRadius: 10,
-  },
-
-  infoBox: {
-    backgroundColor: "#FFF5F7",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-
-  infoLabel: {
-    fontSize: 12,
-    color: "#777",
-  },
-
-  actions: {
+    padding: 16,
+    borderRadius: 20,
     flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     gap: 10,
   },
 
-  cancelBtn: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: "#eee",
-    borderRadius: 10,
-    alignItems: "center",
+  checkoutText: { color: "#fff", fontSize: 16 },
+
+  infoBox: {
+    backgroundColor: "#F6D9F1",
+    padding: 15,
+    borderRadius: 15,
   },
 
-  mockBtn: {
-    flex: 1,
-    padding: 12,
-    backgroundColor: "#886BC1",
-    borderRadius: 10,
-    alignItems: "center",
+  infoText: { textAlign: "center", fontSize: 12, color: "#555" },
+
+  overtimeBox: {
+    flexDirection: "row",
+    gap: 10,
+    backgroundColor: "#FFF7ED",
+    borderWidth: 2,
+    borderColor: "#FDBA74",
+    padding: 15,
+    borderRadius: 20,
   },
+
+  overtimeTitle: { color: "#9A3412", fontWeight: "600" },
+
+  overtimeText: { color: "#C2410C", fontSize: 12 },
 });

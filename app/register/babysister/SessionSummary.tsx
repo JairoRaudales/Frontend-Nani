@@ -1,61 +1,64 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  MessageSquare,
+  Star,
+} from "lucide-react-native";
+import { useState } from "react";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-interface Booking {
-  id: number;
-  clientName: string;
-  clientPhoto: string;
-  scheduledHours: number;
-  hourlyRate: number;
-}
+export default function SessionSummary() {
+  const {
+    bookingId,
+    clientName,
+    clientPhoto,
+    scheduledHours,
+    hourlyRate,
+    checkInTime,
+    checkOutTime,
+    totalHours,
+  } = useLocalSearchParams();
 
-interface Props {
-  booking: Booking;
-  checkInTime: number;
-  checkOutTime: number;
-  totalHours: number;
-  onComplete: () => void;
-}
-
-export default function SessionSummary({
-  booking,
-  checkInTime,
-  checkOutTime,
-  totalHours,
-  onComplete,
-}: Props) {
   const [rating, setRating] = useState(5);
   const [comments, setComments] = useState("");
 
-  const checkInDate = new Date(checkInTime);
-  const checkOutDate = new Date(checkOutTime);
+  const checkInDate = new Date(Number(checkInTime));
+  const checkOutDate = new Date(Number(checkOutTime));
 
-  const scheduledHours = booking.scheduledHours;
-  const overtimeHours = Math.max(0, totalHours - scheduledHours);
+  const scheduled = Number(scheduledHours);
+  const rate = Number(hourlyRate);
+  const workedHours = Number(totalHours);
 
-  const basePay = scheduledHours * booking.hourlyRate;
-  const overtimePay = overtimeHours * booking.hourlyRate;
+  const overtimeHours = Math.max(0, workedHours - scheduled);
+
+  const basePay = scheduled * rate;
+  const overtimePay = overtimeHours * rate;
 
   const lateParentMinutes = 15;
   const lateParentHours = lateParentMinutes / 60;
-  const lateParentPay = lateParentHours * booking.hourlyRate;
+  const lateParentPay = lateParentHours * rate;
 
   const totalPayment = basePay + overtimePay + lateParentPay;
 
-  const formatTime = (date: Date) =>
-    date.toLocaleTimeString("es-ES", {
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("es-ES", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
+  };
 
   const formatDuration = (hours: number) => {
     const h = Math.floor(hours);
@@ -65,173 +68,167 @@ export default function SessionSummary({
 
   const handleSubmit = () => {
     console.log({ rating, comments, totalPayment });
-    onComplete();
-  };
 
-  const getRatingText = () => {
-    switch (rating) {
-      case 5:
-        return "¡Excelente experiencia!";
-      case 4:
-        return "Muy buena experiencia";
-      case 3:
-        return "Experiencia aceptable";
-      case 2:
-        return "Experiencia regular";
-      default:
-        return "Mala experiencia";
-    }
+    router.replace("./BabysitterDashboard");
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity style={styles.backBtn} onPress={onComplete}>
-              <Ionicons name="arrow-back" size={20} color="white" />
-            </TouchableOpacity>
+    <ScrollView style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.replace("./BabysitterDashboard")}
+        >
+          <ArrowLeft color="#fff" size={20} />
+        </TouchableOpacity>
 
-            <View>
-              <Text style={styles.headerTitle}>Resumen de Sesión</Text>
-              <Text style={styles.headerSubtitle}>Trabajo completado</Text>
-            </View>
+        <Text style={styles.headerTitle}>Resumen de Sesión</Text>
+        <Text style={styles.headerSubtitle}>Trabajo completado</Text>
+
+        <View style={styles.successBox}>
+          <CheckCircle color="#fff" size={24} />
+          <View>
+            <Text style={styles.successTitle}>Sesión Finalizada</Text>
+            <Text style={styles.successText}>Reserva #{bookingId}</Text>
           </View>
+        </View>
+      </View>
 
-          <View style={styles.successBox}>
-            <Feather name="check-circle" size={22} color="white" />
+      <View style={styles.content}>
+        {/* CLIENT INFO */}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Image
+              source={{ uri: clientPhoto as string }}
+              style={styles.avatar}
+            />
             <View>
-              <Text style={styles.successTitle}>Sesión Finalizada</Text>
-              <Text style={styles.successSub}>Reserva #{booking.id}</Text>
+              <Text style={styles.clientName}>{clientName}</Text>
+              <Text style={styles.grayText}>Cliente</Text>
             </View>
           </View>
         </View>
 
-        <View style={styles.content}>
-          {/* CLIENTE */}
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Image
-                source={{ uri: booking.clientPhoto }}
-                style={styles.avatar}
-              />
-              <View>
-                <Text style={styles.name}>{booking.clientName}</Text>
-                <Text style={styles.gray}>Cliente</Text>
-              </View>
+        {/* TIME DETAILS */}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Clock color="#886BC1" size={20} />
+            <Text style={styles.cardTitle}>Registro de Tiempo</Text>
+          </View>
+
+          <View style={styles.timeRow}>
+            <View>
+              <Text style={styles.label}>Hora de entrada</Text>
+              <Text style={styles.value}>{formatTime(checkInDate)}</Text>
+            </View>
+
+            <View>
+              <Text style={styles.label}>Hora de salida</Text>
+              <Text style={styles.value}>{formatTime(checkOutDate)}</Text>
             </View>
           </View>
 
-          {/* TIEMPO */}
-          <View style={styles.card}>
-            <View style={styles.rowSmall}>
-              <Feather name="clock" size={18} color="#886BC1" />
-              <Text style={styles.title}>Registro de Tiempo</Text>
-            </View>
+          <View style={styles.totalTime}>
+            <Text style={styles.grayText}>Tiempo total trabajado</Text>
+            <Text style={styles.totalHours}>{formatDuration(workedHours)}</Text>
+          </View>
+        </View>
 
-            <View style={styles.spaceBetween}>
-              <View>
-                <Text style={styles.gray}>Entrada</Text>
-                <Text>{formatTime(checkInDate)}</Text>
-              </View>
-              <View>
-                <Text style={styles.gray}>Salida</Text>
-                <Text>{formatTime(checkOutDate)}</Text>
-              </View>
-            </View>
-
-            <View style={styles.spaceBetween}>
-              <Text>Total trabajado</Text>
-              <Text style={styles.totalTime}>{formatDuration(totalHours)}</Text>
-            </View>
+        {/* PAYMENT */}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <DollarSign color="#886BC1" size={20} />
+            <Text style={styles.cardTitle}>Desglose de Pago</Text>
           </View>
 
-          {/* PAGO */}
-          <View style={styles.card}>
-            <View style={styles.rowSmall}>
-              <Feather name="dollar-sign" size={18} color="#886BC1" />
-              <Text style={styles.title}>Desglose de Pago</Text>
-            </View>
-
-            <View style={styles.spaceBetween}>
-              <Text>Horas programadas</Text>
-              <Text>${basePay.toFixed(2)}</Text>
-            </View>
-
-            {overtimeHours > 0 && (
-              <View style={styles.highlightOrange}>
-                <Text>Horas extra</Text>
-                <Text>+${overtimePay.toFixed(2)}</Text>
-              </View>
-            )}
-
-            {lateParentMinutes > 0 && (
-              <View style={styles.highlightBlue}>
-                <Text>Espera cliente</Text>
-                <Text>+${lateParentPay.toFixed(2)}</Text>
-              </View>
-            )}
-
-            <View style={styles.totalRow}>
-              <Text style={styles.totalText}>Total</Text>
-              <Text style={styles.totalAmount}>${totalPayment.toFixed(2)}</Text>
-            </View>
+          <View style={styles.paymentRow}>
+            <Text>Horas programadas</Text>
+            <Text>${basePay.toFixed(2)}</Text>
           </View>
 
-          {/* ALERTA */}
-          {(overtimeHours > 0 || lateParentMinutes > 0) && (
-            <View style={styles.alertBox}>
-              <Feather name="alert-circle" size={18} color="#FF768A" />
-              <Text style={styles.alertText}>Tiempo adicional cobrado</Text>
+          {overtimeHours > 0 && (
+            <View style={styles.paymentRow}>
+              <Text style={{ color: "#EA580C" }}>
+                Horas extra ({formatDuration(overtimeHours)})
+              </Text>
+              <Text style={{ color: "#EA580C" }}>
+                +${overtimePay.toFixed(2)}
+              </Text>
             </View>
           )}
 
-          {/* RATING */}
-          <View style={styles.card}>
-            <Text style={styles.title}>Calificar al Cliente</Text>
-
-            <View style={styles.stars}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                  <Ionicons
-                    name={star <= rating ? "star" : "star-outline"}
-                    size={30}
-                    color="#FF768A"
-                  />
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.grayCenter}>{getRatingText()}</Text>
+          <View style={styles.paymentRow}>
+            <Text>Espera del cliente</Text>
+            <Text>+${lateParentPay.toFixed(2)}</Text>
           </View>
 
-          {/* COMENTARIOS */}
-          <View style={styles.card}>
-            <Text style={styles.title}>Comentarios</Text>
-
-            <TextInput
-              value={comments}
-              onChangeText={setComments}
-              placeholder="Escribe aquí..."
-              multiline
-              style={styles.input}
-            />
-          </View>
-
-          {/* BOTÓN */}
-          <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>Finalizar y Enviar</Text>
-          </TouchableOpacity>
-
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>
-              El pago se procesará en 24-48 horas.
-            </Text>
+          <View style={styles.totalPaymentRow}>
+            <Text style={styles.totalLabel}>Total a recibir</Text>
+            <Text style={styles.totalPayment}>${totalPayment.toFixed(2)}</Text>
           </View>
         </View>
-      </ScrollView>
-    </View>
+
+        {/* NOTICE */}
+        {(overtimeHours > 0 || lateParentMinutes > 0) && (
+          <View style={styles.noticeBox}>
+            <AlertCircle color="#FF768A" size={20} />
+            <Text style={styles.noticeText}>
+              {overtimeHours > 0 &&
+                `Se trabajó ${formatDuration(overtimeHours)} extra. `}
+              {`El cliente tardó ${lateParentMinutes} minutos en confirmar salida.`}
+            </Text>
+          </View>
+        )}
+
+        {/* RATING */}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Star color="#886BC1" size={20} />
+            <Text style={styles.cardTitle}>Calificar al Cliente</Text>
+          </View>
+
+          <View style={styles.stars}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                <Star
+                  size={36}
+                  color={star <= rating ? "#FF768A" : "#CCC"}
+                  fill={star <= rating ? "#FF768A" : "none"}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* COMMENTS */}
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <MessageSquare color="#886BC1" size={20} />
+            <Text style={styles.cardTitle}>Comentarios</Text>
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Comparte tu experiencia..."
+            multiline
+            value={comments}
+            onChangeText={setComments}
+          />
+        </View>
+
+        {/* SUBMIT */}
+        <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+          <Text style={styles.submitText}>Finalizar y Enviar</Text>
+        </TouchableOpacity>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>
+            El pago será depositado en tu cuenta en 24-48 horas.
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
   );
 }
 
@@ -240,134 +237,126 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: "#886BC1",
-    paddingTop: 50,
-    padding: 20,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
   },
 
-  headerTop: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
+  backBtn: { marginBottom: 10 },
 
-  backBtn: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    padding: 10,
-    borderRadius: 20,
-    marginRight: 10,
-  },
+  headerTitle: { color: "#fff", fontSize: 22, fontWeight: "bold" },
 
-  headerTitle: { color: "white", fontSize: 18 },
-  headerSubtitle: { color: "#ddd", fontSize: 12 },
+  headerSubtitle: { color: "#fff", opacity: 0.8 },
 
   successBox: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 10,
+    marginTop: 20,
     backgroundColor: "rgba(255,255,255,0.2)",
     padding: 15,
-    borderRadius: 15,
+    borderRadius: 20,
   },
 
-  successTitle: { color: "white", fontWeight: "bold" },
-  successSub: { color: "#eee", fontSize: 12 },
+  successTitle: { color: "#fff", fontWeight: "600" },
 
-  content: { padding: 20 },
+  successText: { color: "#fff", opacity: 0.8 },
+
+  content: { padding: 20, gap: 20 },
 
   card: {
-    backgroundColor: "white",
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 15,
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 20,
   },
 
-  row: { flexDirection: "row", alignItems: "center", gap: 10 },
-  rowSmall: { flexDirection: "row", alignItems: "center", gap: 10 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8 },
 
   avatar: { width: 60, height: 60, borderRadius: 30 },
 
-  name: { fontWeight: "bold" },
-  gray: { color: "#777", fontSize: 12 },
+  clientName: { fontSize: 18, fontWeight: "600" },
 
-  title: { fontWeight: "bold", marginBottom: 10 },
+  grayText: { color: "#666" },
 
-  spaceBetween: {
+  cardTitle: { fontSize: 16, fontWeight: "600" },
+
+  label: { fontSize: 12, color: "#888" },
+
+  value: { fontSize: 16 },
+
+  timeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 5,
+    marginTop: 15,
   },
 
-  totalRow: {
+  totalTime: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 15,
+  },
+
+  totalHours: { color: "#886BC1", fontSize: 20, fontWeight: "bold" },
+
+  paymentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 8,
+  },
+
+  totalPaymentRow: {
+    borderTopWidth: 1,
+    borderColor: "#eee",
     marginTop: 10,
-  },
-
-  totalText: { fontWeight: "bold" },
-  totalAmount: { color: "#886BC1", fontSize: 22 },
-
-  totalTime: { color: "#886BC1", fontWeight: "bold" },
-
-  highlightOrange: {
+    paddingTop: 10,
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#FFF4E5",
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
   },
 
-  highlightBlue: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#EAF4FF",
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 5,
-  },
+  totalLabel: { fontSize: 18, fontWeight: "600" },
 
-  alertBox: {
+  totalPayment: { fontSize: 26, fontWeight: "bold", color: "#886BC1" },
+
+  noticeBox: {
     flexDirection: "row",
-    gap: 10,
-    backgroundColor: "#FFF5F7",
+    gap: 8,
+    backgroundColor: "#FFF1F2",
     padding: 15,
     borderRadius: 15,
-    marginBottom: 15,
   },
 
-  alertText: { color: "#FF768A" },
+  noticeText: { fontSize: 12, color: "#444", flex: 1 },
 
   stars: {
     flexDirection: "row",
     justifyContent: "center",
+    marginTop: 10,
     gap: 10,
-    marginVertical: 10,
   },
 
-  grayCenter: { textAlign: "center", color: "#777" },
-
   input: {
+    marginTop: 10,
     backgroundColor: "#F5F5F5",
-    borderRadius: 10,
-    padding: 10,
+    borderRadius: 15,
+    padding: 12,
     height: 100,
     textAlignVertical: "top",
   },
 
-  button: {
+  submitBtn: {
     backgroundColor: "#FF768A",
-    padding: 15,
-    borderRadius: 15,
+    padding: 16,
+    borderRadius: 20,
     alignItems: "center",
   },
 
-  buttonText: { color: "white", fontWeight: "bold" },
+  submitText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 
   infoBox: {
     backgroundColor: "#F6D9F1",
     padding: 15,
-    borderRadius: 10,
-    marginTop: 10,
+    borderRadius: 15,
   },
 
-  infoText: { textAlign: "center", fontSize: 12 },
+  infoText: { textAlign: "center", fontSize: 12, color: "#555" },
 });

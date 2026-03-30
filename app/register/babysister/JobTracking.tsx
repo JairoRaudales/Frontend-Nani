@@ -1,247 +1,238 @@
-import { Feather, Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-    Image,
-    Linking,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import QRScanner from "./QRScanner";
 
-interface Booking {
-  id: number;
-  clientName: string;
-  clientPhoto: string;
-  time: string;
-  children: number;
-  address: string;
-  payment: number;
-  paymentMethod: string;
-  childrenDetails: string;
-  notes?: string;
-  scheduledHours: number;
-  hourlyRate: number;
-  location: {
-    latitude: number;
-    longitude: number;
-  };
-}
+import { useRouter } from "expo-router";
 
-interface JobTrackingProps {
-  booking: Booking;
-  onBack: () => void;
-  onCheckIn: (data: any) => void;
-}
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  MapPin,
+  MessageCircle,
+  Navigation,
+  Phone,
+  QrCode,
+  Users,
+} from "lucide-react-native";
 
-export default function JobTracking({
-  booking,
-  onBack,
-  onCheckIn,
-}: JobTrackingProps) {
-  const [showQRScanner, setShowQRScanner] = useState(false);
+export default function JobTracking() {
+  const router = useRouter();
+
   const [step, setStep] = useState<"pending" | "arrived">("pending");
 
-  const handleQRScanSuccess = (data: any) => {
-    setShowQRScanner(false);
+  const booking = {
+    id: 1,
+    clientName: "Laura Pérez",
+    clientPhoto:
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
+    time: "2:00 PM - 6:00 PM",
+    childrenDetails: "Emma (5 años) y Lucas (3 años)",
+    address: "Calle Principal 123",
+    payment: 60,
+    paymentMethod: "Tarjeta",
+    scheduledHours: 4,
+    hourlyRate: 15,
+    notes: "Alergia al maní en Emma",
+    location: {
+      latitude: 0,
+      longitude: 0,
+    },
+  };
+
+  const openMap = () => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      booking.address,
+    )}`;
+    Linking.openURL(url);
+  };
+
+  const confirmArrival = () => {
     setStep("arrived");
 
     setTimeout(() => {
-      onCheckIn(data);
+      router.push("./ActiveSession");
     }, 1500);
-  };
-
-  const handleOpenMap = () => {
-    const address = encodeURIComponent(booking.address);
-    Linking.openURL(
-      `https://www.google.com/maps/search/?api=1&query=${address}`,
-    );
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView>
         {/* HEADER */}
+
         <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <TouchableOpacity style={styles.backBtn} onPress={onBack}>
-              <Ionicons name="arrow-back" size={20} color="white" />
+          <View style={styles.headerRow}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <ArrowLeft color="white" size={22} />
             </TouchableOpacity>
 
             <View>
               <Text style={styles.headerTitle}>Seguimiento del Trabajo</Text>
-              <Text style={styles.headerSubtitle}>Reserva #{booking.id}</Text>
+              <Text style={styles.headerSub}>Reserva #{booking.id}</Text>
             </View>
           </View>
 
           {/* STATUS */}
+
           <View style={styles.statusCard}>
             {step === "pending" ? (
-              <>
-                <View style={styles.iconCircleYellow}>
-                  <Feather name="alert-circle" size={22} color="white" />
-                </View>
+              <View style={styles.statusRow}>
+                <AlertCircle color="white" size={26} />
                 <View>
-                  <Text style={styles.statusLabel}>Estado</Text>
-                  <Text style={styles.statusText}>Pendiente de llegada</Text>
+                  <Text style={styles.statusText}>Estado</Text>
+                  <Text style={styles.statusValue}>Pendiente de llegada</Text>
                 </View>
-              </>
+              </View>
             ) : (
-              <>
-                <View style={styles.iconCircleGreen}>
-                  <Feather name="check-circle" size={22} color="white" />
-                </View>
+              <View style={styles.statusRow}>
+                <CheckCircle color="white" size={26} />
                 <View>
-                  <Text style={styles.statusLabel}>Estado</Text>
-                  <Text style={styles.statusText}>Llegada confirmada ✓</Text>
+                  <Text style={styles.statusText}>Estado</Text>
+                  <Text style={styles.statusValue}>Llegada confirmada ✓</Text>
                 </View>
-              </>
+              </View>
             )}
           </View>
         </View>
 
-        <View style={styles.content}>
-          {/* CLIENTE */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Información del Cliente</Text>
+        {/* CLIENT INFO */}
 
-            <View style={styles.row}>
-              <Image
-                source={{ uri: booking.clientPhoto }}
-                style={styles.avatar}
-              />
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Información del Cliente</Text>
 
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{booking.clientName}</Text>
+          <View style={styles.clientRow}>
+            <Image
+              source={{ uri: booking.clientPhoto }}
+              style={styles.avatar}
+            />
 
-                <View style={styles.rowSmall}>
-                  <Feather name="clock" size={16} color="#886BC1" />
-                  <Text style={styles.grayText}>{booking.time}</Text>
-                </View>
-              </View>
-            </View>
+            <View>
+              <Text style={styles.clientName}>{booking.clientName}</Text>
 
-            <View style={styles.divider} />
-
-            <View style={styles.rowSmall}>
-              <Ionicons name="people" size={18} color="#886BC1" />
-              <View>
-                <Text style={styles.label}>Niños a cuidar</Text>
-                <Text style={styles.text}>{booking.childrenDetails}</Text>
+              <View style={styles.row}>
+                <Clock size={16} color="#886BC1" />
+                <Text style={styles.grayText}>{booking.time}</Text>
               </View>
             </View>
           </View>
 
-          {/* UBICACION */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Ubicación</Text>
-
-            <View style={styles.rowSmall}>
-              <Ionicons name="location" size={18} color="#FF768A" />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.text}>{booking.address}</Text>
-                <Text style={styles.label}>Asegúrate de llegar a tiempo</Text>
-              </View>
-            </View>
-
-            <TouchableOpacity style={styles.mapBtn} onPress={handleOpenMap}>
-              <Feather name="navigation" size={16} color="#886BC1" />
-              <Text style={styles.mapBtnText}>Abrir en Google Maps</Text>
-            </TouchableOpacity>
+          <View style={styles.row}>
+            <Users size={18} color="#886BC1" />
+            <Text style={styles.grayText}>{booking.childrenDetails}</Text>
           </View>
-
-          {/* NOTAS */}
-          {booking.notes && (
-            <View style={styles.notesCard}>
-              <View style={styles.rowSmall}>
-                <Feather name="alert-circle" size={18} color="#FF768A" />
-                <Text style={styles.cardTitle}>Notas Importantes</Text>
-              </View>
-
-              <Text style={styles.grayText}>{booking.notes}</Text>
-            </View>
-          )}
-
-          {/* PAGOS */}
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Detalles del Pago</Text>
-
-            <View style={styles.spaceBetween}>
-              <Text style={styles.grayText}>Método de pago</Text>
-              <Text>{booking.paymentMethod}</Text>
-            </View>
-
-            <View style={styles.spaceBetween}>
-              <Text style={styles.grayText}>Horas</Text>
-              <Text>{booking.scheduledHours}h</Text>
-            </View>
-
-            <View style={styles.spaceBetween}>
-              <Text style={styles.grayText}>Tarifa</Text>
-              <Text>${booking.hourlyRate}/h</Text>
-            </View>
-
-            <View style={styles.totalRow}>
-              <Text style={styles.totalText}>Total</Text>
-              <Text style={styles.totalAmount}>${booking.payment}</Text>
-            </View>
-          </View>
-
-          {/* ACCIONES */}
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.actionBtn}>
-              <Ionicons name="call" size={22} color="#886BC1" />
-              <Text>Llamar</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionBtn}>
-              <Ionicons name="chatbubble" size={22} color="#886BC1" />
-              <Text>Mensaje</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* CHECK IN */}
-          {step === "pending" && (
-            <>
-              <View style={styles.qrInfo}>
-                <Text style={styles.text}>
-                  Escanea el QR del cliente para confirmar llegada.
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.checkBtn}
-                onPress={() => setShowQRScanner(true)}
-              >
-                <Ionicons name="qr-code" size={20} color="white" />
-                <Text style={styles.checkText}>Confirmar Llegada</Text>
-              </TouchableOpacity>
-            </>
-          )}
-
-          {step === "arrived" && (
-            <View style={styles.successBox}>
-              <Feather name="check-circle" size={40} color="green" />
-              <Text style={styles.successText}>¡Llegada Confirmada!</Text>
-            </View>
-          )}
         </View>
-      </ScrollView>
 
-      {/* QR SCANNER */}
-      <QRScanner
-        isOpen={showQRScanner}
-        onClose={() => setShowQRScanner(false)}
-        onScanSuccess={handleQRScanSuccess}
-        expectedLocation={{
-          address: booking.address,
-          latitude: booking.location.latitude,
-          longitude: booking.location.longitude,
-        }}
-        type="checkin"
-      />
+        {/* LOCATION */}
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Ubicación</Text>
+
+          <View style={styles.row}>
+            <MapPin size={18} color="#FF768A" />
+            <Text style={styles.grayText}>{booking.address}</Text>
+          </View>
+
+          <TouchableOpacity style={styles.mapButton} onPress={openMap}>
+            <Navigation size={18} color="#886BC1" />
+            <Text style={styles.mapText}>Abrir en Google Maps</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* NOTES */}
+
+        {booking.notes && (
+          <View style={styles.notes}>
+            <View style={styles.row}>
+              <AlertCircle size={18} color="#FF768A" />
+              <Text style={styles.cardTitle}>Notas Importantes</Text>
+            </View>
+
+            <Text style={styles.grayText}>{booking.notes}</Text>
+          </View>
+        )}
+
+        {/* PAYMENT */}
+
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Detalles del Pago</Text>
+
+          <View style={styles.paymentRow}>
+            <Text>Método de pago</Text>
+            <Text>{booking.paymentMethod}</Text>
+          </View>
+
+          <View style={styles.paymentRow}>
+            <Text>Horas</Text>
+            <Text>{booking.scheduledHours}h</Text>
+          </View>
+
+          <View style={styles.paymentRow}>
+            <Text>Tarifa</Text>
+            <Text>${booking.hourlyRate}/h</Text>
+          </View>
+
+          <View style={styles.totalRow}>
+            <Text>Total estimado</Text>
+            <Text style={styles.total}>${booking.payment}</Text>
+          </View>
+        </View>
+
+        {/* ACTIONS */}
+
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.actionCard}>
+            <Phone size={22} color="#886BC1" />
+            <Text>Llamar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard}>
+            <MessageCircle size={22} color="#886BC1" />
+            <Text>Mensaje</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* CHECK IN */}
+
+        {step === "pending" && (
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={() =>
+              router.push({
+                pathname: "./QRScanner",
+                params: {
+                  bookingId: booking.id,
+                  type: "checkin",
+                  address: booking.address,
+                  latitude: booking.location.latitude,
+                  longitude: booking.location.longitude,
+                },
+              })
+            }
+          >
+            <QrCode color="white" size={20} />
+            <Text style={styles.confirmText}>Confirmar llegada</Text>
+          </TouchableOpacity>
+        )}
+
+        {step === "arrived" && (
+          <View style={styles.success}>
+            <CheckCircle size={40} color="green" />
+            <Text style={styles.successText}>¡Llegada Confirmada!</Text>
+            <Text>Iniciando sesión...</Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -251,105 +242,89 @@ const styles = StyleSheet.create({
 
   header: {
     backgroundColor: "#886BC1",
-    paddingTop: 50,
-    padding: 20,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
 
-  headerTop: {
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 15,
     marginBottom: 20,
   },
 
-  backBtn: {
+  backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 10,
   },
 
   headerTitle: { color: "white", fontSize: 18 },
-  headerSubtitle: { color: "#ddd", fontSize: 12 },
+
+  headerSub: { color: "white", opacity: 0.8 },
 
   statusCard: {
-    flexDirection: "row",
-    alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.2)",
     padding: 15,
     borderRadius: 15,
   },
 
-  iconCircleYellow: {
-    width: 45,
-    height: 45,
-    borderRadius: 25,
-    backgroundColor: "#facc15",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
+  statusRow: { flexDirection: "row", alignItems: "center", gap: 10 },
 
-  iconCircleGreen: {
-    width: 45,
-    height: 45,
-    borderRadius: 25,
-    backgroundColor: "green",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
-  },
+  statusText: { color: "white", fontSize: 12 },
 
-  statusLabel: { color: "#eee", fontSize: 12 },
-  statusText: { color: "white", fontWeight: "bold" },
-
-  content: { padding: 20 },
+  statusValue: { color: "white", fontSize: 16 },
 
   card: {
     backgroundColor: "white",
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 15,
+    margin: 20,
+    padding: 20,
+    borderRadius: 20,
   },
 
-  cardTitle: { fontWeight: "bold", marginBottom: 10 },
+  cardTitle: { fontSize: 16, marginBottom: 10 },
 
-  row: { flexDirection: "row", alignItems: "center" },
-  rowSmall: { flexDirection: "row", alignItems: "center", gap: 10 },
+  clientRow: {
+    flexDirection: "row",
+    gap: 15,
+    marginBottom: 10,
+  },
 
   avatar: { width: 60, height: 60, borderRadius: 30 },
 
-  name: { fontWeight: "bold" },
-  grayText: { color: "#777" },
-  text: { color: "#333" },
-  label: { fontSize: 12, color: "#999" },
+  clientName: { fontSize: 16 },
 
-  divider: { height: 1, backgroundColor: "#eee", marginVertical: 10 },
+  row: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 5 },
 
-  mapBtn: {
+  grayText: { color: "#666" },
+
+  mapButton: {
     flexDirection: "row",
-    justifyContent: "center",
-    padding: 10,
+    gap: 8,
     backgroundColor: "#F6D9F1",
+    padding: 12,
     borderRadius: 10,
     marginTop: 10,
+    justifyContent: "center",
   },
 
-  mapBtnText: { marginLeft: 5, color: "#886BC1" },
+  mapText: { color: "#886BC1" },
 
-  notesCard: {
+  notes: {
+    marginHorizontal: 20,
+    padding: 20,
+    borderRadius: 20,
     backgroundColor: "#FFF5F7",
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 15,
   },
 
-  spaceBetween: {
+  paymentRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginVertical: 5,
+    marginBottom: 8,
   },
 
   totalRow: {
@@ -358,48 +333,41 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  totalText: { fontWeight: "bold" },
-  totalAmount: { color: "#886BC1", fontSize: 20 },
+  total: { color: "#886BC1", fontSize: 20 },
 
   actions: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
+    justifyContent: "space-around",
+    marginBottom: 20,
   },
 
-  actionBtn: {
-    flex: 1,
+  actionCard: {
     backgroundColor: "white",
-    padding: 15,
+    padding: 20,
+    borderRadius: 20,
     alignItems: "center",
-    borderRadius: 15,
-    marginHorizontal: 5,
+    width: "40%",
   },
 
-  qrInfo: {
-    backgroundColor: "#F6D9F1",
+  confirmButton: {
+    backgroundColor: "#FF768A",
+    margin: 20,
     padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-
-  checkBtn: {
+    borderRadius: 20,
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FF768A",
-    padding: 15,
-    borderRadius: 15,
+    gap: 10,
   },
 
-  checkText: { color: "white", marginLeft: 10 },
+  confirmText: { color: "white", fontSize: 16 },
 
-  successBox: {
+  success: {
+    margin: 20,
+    padding: 30,
+    borderRadius: 20,
+    backgroundColor: "#E9F9EE",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#e6fffa",
-    borderRadius: 15,
   },
 
-  successText: { marginTop: 10, fontWeight: "bold", color: "green" },
+  successText: { fontSize: 18, marginTop: 10 },
 });

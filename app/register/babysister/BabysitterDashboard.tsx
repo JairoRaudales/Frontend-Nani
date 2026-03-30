@@ -142,7 +142,15 @@ export default function BabysitterDashboard() {
                 <Text style={styles.address}>{booking.address}</Text>
 
                 <View style={styles.buttonRow}>
-                  <TouchableOpacity style={styles.acceptBtn}>
+                  <TouchableOpacity
+                    style={styles.acceptBtn}
+                    onPress={() =>
+                      router.push({
+                        pathname: "./JobTracking",
+                        params: { bookingId: booking.id },
+                      })
+                    }
+                  >
                     <QrCode size={14} color="white" />
                     <Text style={styles.acceptText}>Aceptar</Text>
                   </TouchableOpacity>
