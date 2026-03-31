@@ -506,23 +506,25 @@
 //   mainBtnText: { color: "white", fontWeight: "bold", fontSize: 16 },
 // });
 
-import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import * as DocumentPicker from "expo-document-picker";
+import * as ImagePicker from "expo-image-picker";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Location from "expo-location";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
-  View,
+  Alert,
+  Image,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Image,
-  Alert
+  View,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
-import { useRouter } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import MapView, { Marker } from "react-native-maps";
 
 export default function BabysitterRegistrationForm() {
   const router = useRouter();
@@ -558,6 +560,38 @@ export default function BabysitterRegistrationForm() {
     idPhoto: null as any,
     facePhoto: null as any,
   });
+
+  const [region, setRegion] = useState({
+    latitude: 14.0723,
+    longitude: -87.1921,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  });
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert("Permiso requerido", "Se necesita acceso a la ubicación");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+
+      setRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+
+      setFormData({
+        ...formData,
+        location: `${location.coords.latitude}, ${location.coords.longitude}`,
+      });
+    })();
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
@@ -654,34 +688,31 @@ export default function BabysitterRegistrationForm() {
   };
 
   const handleNext = () => {
-
-    if(step === 1){
-
-      if(!formData.firstName || !formData.lastName){
-        Alert.alert("Error","Ingresa tu nombre completo")
-        return
+    if (step === 1) {
+      if (!formData.firstName || !formData.lastName) {
+        Alert.alert("Error", "Ingresa tu nombre completo");
+        return;
       }
 
-      if(!formData.email.includes("@")){
-        Alert.alert("Error","Correo inválido")
-        return
+      if (!formData.email.includes("@")) {
+        Alert.alert("Error", "Correo inválido");
+        return;
       }
 
-      if(Number(formData.age) < 18){
-        Alert.alert("Error","Debes ser mayor de edad")
-        return
+      if (Number(formData.age) < 18) {
+        Alert.alert("Error", "Debes ser mayor de edad");
+        return;
       }
 
-      if(formData.password.length < 6){
-        Alert.alert("Error","La contraseña debe tener mínimo 6 caracteres")
-        return
+      if (formData.password.length < 6) {
+        Alert.alert("Error", "La contraseña debe tener mínimo 6 caracteres");
+        return;
       }
 
-      if(formData.password !== formData.confirmPassword){
-        Alert.alert("Error","Las contraseñas no coinciden")
-        return
+      if (formData.password !== formData.confirmPassword) {
+        Alert.alert("Error", "Las contraseñas no coinciden");
+        return;
       }
-
     }
 
     if (step < totalSteps) setStep(step + 1);
@@ -692,6 +723,19 @@ export default function BabysitterRegistrationForm() {
     if (step > 1) setStep(step - 1);
     else router.back();
   };
+
+  const experienceYears = [
+    "1 año",
+    "2 años",
+    "3 años",
+    "4 años",
+    "5 años",
+    "6 años",
+    "7 años",
+    "8 años",
+    "9 años",
+    "10+ años",
+  ];
 
   return (
     <View style={styles.container}>
@@ -753,7 +797,7 @@ export default function BabysitterRegistrationForm() {
               <Text style={styles.label}>Fecha de nacimiento</Text>
               <TouchableOpacity
                 style={styles.inputContainer}
-                onPress={()=>setShowDatePicker(true)}
+                onPress={() => setShowDatePicker(true)}
               >
                 <Ionicons name="calendar-outline" size={18} color="#9CA3AF" />
                 <TextInput
@@ -802,35 +846,62 @@ export default function BabysitterRegistrationForm() {
                 />
               </View>
 
-              <Text style={styles.label}>Ubicación</Text>
-              <View style={styles.inputContainer}>
-                <Ionicons name="location-outline" size={18} color="#9CA3AF" />
-                <TextInput
-                  placeholder="Ciudad, País"
-                  style={styles.input}
-                  onChangeText={(v) => handleInputChange("location", v)}
-                />
-              </View>
+              <Text style={styles.label}>Selecciona tu ubicación</Text>
+
+              <MapView
+                style={{
+                  width: "100%",
+                  height: 200,
+                  borderRadius: 15,
+                  marginTop: 10,
+                }}
+                region={region}
+                onPress={(e) => {
+                  const { latitude, longitude } = e.nativeEvent.coordinate;
+
+                  setRegion({
+                    ...region,
+                    latitude,
+                    longitude,
+                  });
+
+                  handleInputChange("location", `${latitude}, ${longitude}`);
+                }}
+              >
+                <Marker coordinate={region} />
+              </MapView>
+
+              <Text style={{ fontSize: 12, marginTop: 5, color: "#6B7280" }}>
+                Toca el mapa para seleccionar tu ubicación
+              </Text>
 
               <Text style={styles.label}>Contraseña</Text>
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={18}
+                  color="#9CA3AF"
+                />
                 <TextInput
                   placeholder="Contraseña"
                   secureTextEntry
                   style={styles.input}
-                  onChangeText={(v)=>handleInputChange("password",v)}
+                  onChangeText={(v) => handleInputChange("password", v)}
                 />
               </View>
 
               <Text style={styles.label}>Confirmar contraseña</Text>
               <View style={styles.inputContainer}>
-                <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={18}
+                  color="#9CA3AF"
+                />
                 <TextInput
                   placeholder="Confirmar contraseña"
                   secureTextEntry
                   style={styles.input}
-                  onChangeText={(v)=>handleInputChange("confirmPassword",v)}
+                  onChangeText={(v) => handleInputChange("confirmPassword", v)}
                 />
               </View>
             </View>
@@ -860,8 +931,13 @@ export default function BabysitterRegistrationForm() {
 
                 {formData.idPhoto && (
                   <Image
-                    source={{uri:formData.idPhoto.uri}}
-                    style={{width:80,height:80,marginTop:10,borderRadius:10}}
+                    source={{ uri: formData.idPhoto.uri }}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      marginTop: 10,
+                      borderRadius: 10,
+                    }}
                   />
                 )}
               </TouchableOpacity>
@@ -874,8 +950,13 @@ export default function BabysitterRegistrationForm() {
 
                 {formData.facePhoto && (
                   <Image
-                    source={{uri:formData.facePhoto.uri}}
-                    style={{width:80,height:80,marginTop:10,borderRadius:10}}
+                    source={{ uri: formData.facePhoto.uri }}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      marginTop: 10,
+                      borderRadius: 10,
+                    }}
                   />
                 )}
               </TouchableOpacity>
@@ -899,12 +980,30 @@ export default function BabysitterRegistrationForm() {
             <View style={styles.card}>
               <Text style={styles.cardTitle}>Experiencia</Text>
 
-              <TextInput
-                placeholder="Describe tu experiencia profesional..."
-                multiline
-                style={styles.textArea}
-                onChangeText={(v) => handleInputChange("experience", v)}
-              />
+              <View style={{ marginTop: 10 }}>
+                {experienceYears.map((year, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={{
+                      padding: 12,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor:
+                        formData.experience === year ? "#FF768A" : "#F3F4F6",
+                    }}
+                    onPress={() => handleInputChange("experience", year)}
+                  >
+                    <Text
+                      style={{
+                        color: formData.experience === year ? "white" : "#333",
+                        fontWeight: "500",
+                      }}
+                    >
+                      {year}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             <View style={styles.card}>
@@ -924,17 +1023,24 @@ export default function BabysitterRegistrationForm() {
               </View>
 
               {formData.skills.map((skill, i) => (
-                <View key={i} style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
+                <View
+                  key={i}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <Text style={styles.tag}>{skill}</Text>
 
                   <TouchableOpacity
-                    onPress={()=>{
-                      const updated=[...formData.skills]
-                      updated.splice(i,1)
-                      setFormData({...formData,skills:updated})
+                    onPress={() => {
+                      const updated = [...formData.skills];
+                      updated.splice(i, 1);
+                      setFormData({ ...formData, skills: updated });
                     }}
                   >
-                    <Ionicons name="close-circle" size={20} color="#FF768A"/>
+                    <Ionicons name="close-circle" size={20} color="#FF768A" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -964,17 +1070,24 @@ export default function BabysitterRegistrationForm() {
               </View>
 
               {formData.certificates.map((c, i) => (
-                <View key={i} style={{flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
+                <View
+                  key={i}
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
                   <Text style={styles.tag}>{c}</Text>
 
                   <TouchableOpacity
-                    onPress={()=>{
-                      const updated=[...formData.certificates]
-                      updated.splice(i,1)
-                      setFormData({...formData,certificates:updated})
+                    onPress={() => {
+                      const updated = [...formData.certificates];
+                      updated.splice(i, 1);
+                      setFormData({ ...formData, certificates: updated });
                     }}
                   >
-                    <Ionicons name="close-circle" size={20} color="#FF768A"/>
+                    <Ionicons name="close-circle" size={20} color="#FF768A" />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -987,7 +1100,7 @@ export default function BabysitterRegistrationForm() {
                 placeholder="Ej: 200 LPS"
                 keyboardType="numeric"
                 style={styles.input}
-                onChangeText={(v)=>handleInputChange("rate",v)}
+                onChangeText={(v) => handleInputChange("rate", v)}
               />
             </View>
 
